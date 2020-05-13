@@ -1,0 +1,32 @@
+@startuml
+User -> WatchApp: Bolus
+WatchApp -> User: How Much?
+User -> WatchApp: Enters Amount
+WatchApp -> User: Please Confirm
+User -> WatchApp: Confirms
+WatchApp -> Loop: sendBolusMessage
+alt sendBolusMessage succeeds
+  Loop -> WatchApp: returns []
+  WatchApp -> User: OK
+  WatchApp -> Loop: Bolus X units
+  Loop -> Pump: Bolus X units
+
+  alt Pump accepts bolus
+
+     Pump -> Loop: Confirmation
+
+  else pump rejects bolus
+
+     Pump -> Loop: Bolus Failed
+     Loop -> User: (Notification) Bolus Failed
+
+  else pump does not respond
+
+     Loop -> User: (Notification) Bolus Failed
+
+  end
+
+else sendBolusMessage fails
+  WatchApp -> User: Bolus failed
+end
+@enduml
