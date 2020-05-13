@@ -29,4 +29,5 @@ alt sendBolusMessage succeeds
 else sendBolusMessage fails
   WatchApp -> User: Bolus failed
 end
+
 @enduml

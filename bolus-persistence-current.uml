@@ -1,0 +1,50 @@
+@startuml
+entity UI
+database DoseStore
+participant LoopDataManager
+participant DeviceDataManager
+participant PumpManager
+participant Pump
+
+UI -> DeviceDataManager: enactBolus
+note left
+UI Bolus triggers:
+Watch bolus, meal bolus,
+normal bolus, and
+notification retry bolus
+end note
+DeviceDataManager -> LoopDataManager: addRequestedBolus
+DeviceDataManager -> PumpManager: enactBolus
+alt preflight ok
+  PumpManager -> DeviceDataManager: willRequest
+  PumpManager -> Pump: Bolus X units
+
+  alt Pump accepts bolus
+
+     Pump -> PumpManager: Confirmation
+     PumpManager -> DeviceDataManager: hasNewPumpEvents
+     DeviceDataManager -> LoopDataManager: addPumpEvents
+     LoopDataManager -> DoseStore: addPumpEvents
+     PumpManager -> DeviceDataManager: success
+     DeviceDataManager -> LoopDataManager: bolusConfirmed
+
+  else pump rejects bolus
+
+     Pump -> PumpManager: Bolus Failed
+     PumpManager -> DeviceDataManager: failure
+     DeviceDataManager -> LoopDataManager: bolusRequestFailed
+     DeviceDataManager -> UI: Failure notification
+
+  else pump does not respond
+
+     PumpManager -> DeviceDataManager: failure
+     DeviceDataManager -> LoopDataManager: bolusRequestFailed
+     DeviceDataManager -> UI: Failure notification
+
+  end
+else preflight not ok
+  PumpManager -> DeviceDataManager: failure
+  DeviceDataManager -> LoopDataManager: bolusRequestFailed
+  DeviceDataManager -> UI: Failure notification
+end
+@enduml
